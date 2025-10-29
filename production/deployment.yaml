@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: guitartortona-api
+  namespace: default
+  labels:
+    app: guitartortona-api
+    environment: production
+spec:
+  replicas: 2  # Production: più repliche
+  selector:
+    matchLabels:
+      app: guitartortona-api
+  template:
+    metadata:
+      labels:
+        app: guitartortona-api
+        environment: production
+    spec:
+      imagePullSecrets:
+      - name: ghcr-login-secret
+      containers:
+      - name: api
+        image: ghcr.io/mmzitarosa/guitartortona-api:latest
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:mariadb://mariadb.databases.svc.cluster.local:3306/guitartortona"
+        - name: SPRING_DATASOURCE_DRIVER_CLASS_NAME
+          value: "org.mariadb.jdbc.Driver"
+        - name: SPRING_JPA_DATABASE_PLATFORM
+          value: "org.hibernate.dialect.MariaDBDialect"
+        - name: SPRING_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-credentials
+              key: username
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-credentials
+              key: password
+        resources:
+          requests:
+            memory: "512Mi"  # Production: più risorse
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 90
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 0
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 30

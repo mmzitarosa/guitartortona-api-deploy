@@ -1,0 +1,14 @@
+# Secrets (NON committiamo mai secrets!)
+*.key
+*.pem
+*.crt
+*-credentials.txt
+
+# Temporary
+*.tmp
+*.swp
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
