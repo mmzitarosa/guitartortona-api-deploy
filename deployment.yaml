@@ -21,7 +21,7 @@ spec:
       - name: ghcr-login-secret
       containers:
       - name: api
-        image: ghcr.io/mmzitarosa/guitartortona-api:staging
+        image: ghcr.io/mmzitarosa/guitartortona-api:1.2.0-rc5
         ports:
         - containerPort: 8080
           name: http
