@@ -2,12 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: guitartortona-api
-  namespace: default
   labels:
     app: guitartortona-api
-    environment: production
+    version: v1
 spec:
-  replicas: 2  # Production: più repliche
+  replicas: 2
   selector:
     matchLabels:
       app: guitartortona-api
@@ -15,67 +14,103 @@ spec:
     metadata:
       labels:
         app: guitartortona-api
-        environment: production
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/actuator/prometheus"
     spec:
-      imagePullSecrets:
-      - name: ghcr-login-secret
       containers:
-      - name: api
-        image: ghcr.io/mmzitarosa/guitartortona-api:latest
+      - name: app
+        image: ghcr.io/mmzitarosa/guitartortona-api:latest  # Overridden by Kustomize
+        imagePullPolicy: Always
         ports:
-        - containerPort: 8080
-          name: http
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: management
+          containerPort: 8081
           protocol: TCP
         env:
-        - name: SPRING_PROFILES_ACTIVE
-          value: "prod"
-        - name: SPRING_DATASOURCE_URL
-          value: "jdbc:mariadb://mariadb.databases.svc.cluster.local:3306/guitartortona"
-        - name: SPRING_DATASOURCE_DRIVER_CLASS_NAME
-          value: "org.mariadb.jdbc.Driver"
-        - name: SPRING_JPA_DATABASE_PLATFORM
-          value: "org.hibernate.dialect.MariaDBDialect"
-        - name: SPRING_DATASOURCE_USERNAME
+        # Database connection (da ExternalSecret)
+        - name: DB_NAME
           valueFrom:
             secretKeyRef:
-              name: mariadb-credentials
+              name: guitartortona-db
+              key: database
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: guitartortona-db
               key: username
-        - name: SPRING_DATASOURCE_PASSWORD
+        - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: mariadb-credentials
+              name: guitartortona-db
               key: password
-        resources:
-          requests:
-            memory: "512Mi"  # Production: più risorse
-            cpu: "250m"
-          limits:
-            memory: "1Gi"
-            cpu: "1000m"
+        # Spring profiles
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kubernetes"
+        # JVM options
+        - name: JAVA_OPTS
+          value: "-Xms512m -Xmx1024m -XX:+UseG1GC"
+        # ConfigMap mount
+        volumeMounts:
+        - name: config
+          mountPath: /config
+          readOnly: true
+        # Health checks
         livenessProbe:
           httpGet:
             path: /actuator/health/liveness
-            port: 8080
-            scheme: HTTP
-          initialDelaySeconds: 90
+            port: management
+          initialDelaySeconds: 60
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
         readinessProbe:
           httpGet:
             path: /actuator/health/readiness
-            port: 8080
-            scheme: HTTP
+            port: management
           initialDelaySeconds: 30
           periodSeconds: 5
           timeoutSeconds: 3
           failureThreshold: 3
-        startupProbe:
-          httpGet:
-            path: /actuator/health
-            port: 8080
-            scheme: HTTP
-          initialDelaySeconds: 0
-          periodSeconds: 10
-          timeoutSeconds: 3
-          failureThreshold: 30
+        # Resources
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        # Security
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+      # Volumes
+      volumes:
+      - name: config
+        configMap:
+          name: guitartortona-api-config
+      # ImagePullSecrets per GHCR
+      imagePullSecrets:
+      - name: ghcr-secret
+      # Scheduling
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - guitartortona-api
+              topologyKey: kubernetes.io/hostname

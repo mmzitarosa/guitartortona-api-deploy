@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: guitartortona-api
+spec:
+  replicas: 1  # Staging: 1 replica
+  template:
+    metadata:
+      labels:
+        environment: staging
+    spec:
+      containers:
+      - name: app
+        env:
+        - name: ENVIRONMENT
+          value: "staging"
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kubernetes,staging"
+        - name: JAVA_OPTS
+          value: "-Xms256m -Xmx512m -XX:+UseG1GC"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"

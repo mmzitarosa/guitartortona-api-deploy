@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: guitartortona-api
+spec:
+  replicas: 3  # Production: 3 repliche per HA
+  template:
+    metadata:
+      labels:
+        environment: production
+    spec:
+      containers:
+      - name: app
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: SPRING_PROFILES_ACTIVE
+          value: "kubernetes,production"
+        - name: JAVA_OPTS
+          value: "-Xms512m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"

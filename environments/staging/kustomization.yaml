@@ -1,0 +1,39 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: staging
+
+resources:
+- ../../deployment.yaml
+- ../../service.yaml
+- ../../configmap.yaml
+- ../../external-secret.yaml
+- namespace.yaml
+- ingress.yaml
+- external-secret-ghcr.yaml
+
+patches:
+- path: deployment-patch.yaml
+
+# Override ExternalSecret path per staging
+replacements:
+- source:
+    kind: Namespace
+    fieldPath: metadata.name
+  targets:
+  - select:
+      kind: ExternalSecret
+      name: guitartortona-db
+    fieldPaths:
+    - spec.dataFrom.0.extract.key
+    options:
+      delimiter: '/'
+      index: 2
+
+commonLabels:
+  environment: staging
+  app.kubernetes.io/part-of: guitartortona-api
+
+images:
+- name: ghcr.io/mmzitarosa/guitartortona-api
+  newTag: staging  # Update via CI/CD
