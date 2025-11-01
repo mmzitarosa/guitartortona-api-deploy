@@ -12,17 +12,17 @@ metadata:
 spec:
   ingressClassName: nginx
   tls:
-  - hosts:
-    - api-staging.guitar.lab
-    secretName: guitar-wildcard-tls
+    - hosts:
+        - api-staging.guitar.lab
+      secretName: guitar-wildcard-tls
   rules:
-  - host: api-staging.guitar.lab
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: guitartortona-api
-            port:
-              number: 8080
+    - host: api-staging.guitar.lab
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: guitartortona-api
+                port:
+                  number: 8080

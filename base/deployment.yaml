@@ -1,0 +1,125 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: guitartortona-api
+  labels:
+    app: guitartortona-api
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: guitartortona-api
+  template:
+    metadata:
+      labels:
+        app: guitartortona-api
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/actuator/prometheus"
+    spec:
+      containers:
+        - name: app
+          image: ghcr.io/mmzitarosa/guitartortona-api:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: management
+              containerPort: 8081
+              protocol: TCP
+          env:
+            # Database connection
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: guitartortona-db
+                  key: database
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: guitartortona-db
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: guitartortona-db
+                  key: password
+            - name: JDBC_URL
+              valueFrom:
+                secretKeyRef:
+                  name: guitartortona-db
+                  key: jdbc-url
+            # Spring profiles
+            - name: SPRING_PROFILES_ACTIVE
+              value: "kubernetes"
+            # JVM options
+            - name: JAVA_OPTS
+              value: "-Xms512m -Xmx1024m -XX:+UseG1GC"
+          # ConfigMap mount
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          # Health checks
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: management
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: management
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          # Resources
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          # Security
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+      # Volumes
+      volumes:
+        - name: config
+          configMap:
+            name: guitartortona-api-config
+        - name: tmp
+          emptyDir: { }
+      # ImagePullSecrets per GHCR
+      imagePullSecrets:
+        - name: ghcr-secret
+      # Scheduling
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - guitartortona-api
+                topologyKey: kubernetes.io/hostname
