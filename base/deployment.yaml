@@ -95,13 +95,6 @@ spec:
               drop:
                 - ALL
             readOnlyRootFilesystem: true
-      # Volumes
-      volumes:
-        - name: config
-          configMap:
-            name: guitartortona-api-config
-        - name: tmp
-          emptyDir: { }
       # ImagePullSecrets per GHCR
       imagePullSecrets:
         - name: ghcr-secret
