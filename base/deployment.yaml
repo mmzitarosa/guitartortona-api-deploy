@@ -54,13 +54,6 @@ spec:
             # JVM options
             - name: JAVA_OPTS
               value: "-Xms512m -Xmx1024m -XX:+UseG1GC"
-          # ConfigMap mount
-          volumeMounts:
-            - name: config
-              mountPath: /config
-              readOnly: true
-            - name: tmp
-              mountPath: /tmp
           # Health checks
           livenessProbe:
             httpGet:
