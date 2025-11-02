@@ -17,7 +17,7 @@ spec:
         version: v1
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/port: "8080"
+        prometheus.io/port: "8081"
         prometheus.io/path: "/actuator/prometheus"
     spec:
       # Security context a livello di POD
@@ -58,13 +58,15 @@ spec:
             # JVM options
             - name: JAVA_OPTS
               value: "-Xms512m -Xmx1024m -XX:+UseG1GC -Djava.io.tmpdir=/tmp"
-            # Tomcat basedir
-            - name: SERVER_TOMCAT_BASEDIR
-              value: "/tmp"
+            - name: SPRING_CONFIG_ADDITIONAL_LOCATION
+              value: "file:/config/"
           # Volume mounts
           volumeMounts:
             - name: tmp
               mountPath: /tmp
+            - name: config
+              mountPath: /config
+              readOnly: true
           # Health checks
           livenessProbe:
             httpGet:
@@ -103,6 +105,10 @@ spec:
       volumes:
         - name: tmp
           emptyDir: { }
+        - name: config
+          configMap:
+            name: guitartortona-api-config
+
       # ImagePullSecrets per GHCR
       imagePullSecrets:
         - name: ghcr-secret
