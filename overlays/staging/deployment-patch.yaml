@@ -17,7 +17,7 @@ spec:
             - name: SPRING_PROFILES_ACTIVE
               value: "kubernetes,staging"
             - name: JAVA_OPTS
-              value: "-Xms256m -Xmx512m -XX:+UseG1GC"
+              value: "-Xms256m -Xmx512m -XX:+UseG1GC -Djava.io.tmpdir=/tmp"
           resources:
             requests:
               memory: "256Mi"

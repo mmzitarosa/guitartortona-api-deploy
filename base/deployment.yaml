@@ -20,6 +20,11 @@ spec:
         prometheus.io/port: "8080"
         prometheus.io/path: "/actuator/prometheus"
     spec:
+      # Security context a livello di POD
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        runAsNonRoot: true
       containers:
         - name: app
           image: ghcr.io/mmzitarosa/guitartortona-api:latest
@@ -47,13 +52,19 @@ spec:
                 secretKeyRef:
                   name: guitartortona-db
                   key: password
-
             # Spring profiles
             - name: SPRING_PROFILES_ACTIVE
               value: "kubernetes"
             # JVM options
             - name: JAVA_OPTS
-              value: "-Xms512m -Xmx1024m -XX:+UseG1GC"
+              value: "-Xms512m -Xmx1024m -XX:+UseG1GC -Djava.io.tmpdir=/tmp"
+            # Tomcat basedir
+            - name: SERVER_TOMCAT_BASEDIR
+              value: "/tmp"
+          # Volume mounts
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
           # Health checks
           livenessProbe:
             httpGet:
@@ -88,6 +99,10 @@ spec:
               drop:
                 - ALL
             readOnlyRootFilesystem: true
+      # Volumes
+      volumes:
+        - name: tmp
+          emptyDir: { }
       # ImagePullSecrets per GHCR
       imagePullSecrets:
         - name: ghcr-secret
