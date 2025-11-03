@@ -3,9 +3,11 @@ kind: Service
 metadata:
   name: guitartortona-api
   labels:
-    app: guitartortona-api
+    app.kubernetes.io/name: guitartortona-api
 spec:
   type: ClusterIP
+  selector:
+    app.kubernetes.io/name: guitartortona-api
   ports:
     - name: http
       port: 8080
@@ -15,5 +17,3 @@ spec:
       port: 8081
       targetPort: management
       protocol: TCP
-  selector:
-    app: guitartortona-api

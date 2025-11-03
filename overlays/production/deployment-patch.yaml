@@ -3,14 +3,13 @@ kind: Deployment
 metadata:
   name: guitartortona-api
 spec:
-  replicas: 3
   template:
     metadata:
       labels:
         environment: production
     spec:
       containers:
-        - name: app
+        - name: guitartortona-api
           env:
             - name: ENVIRONMENT
               value: "production"

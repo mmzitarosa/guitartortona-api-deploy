@@ -10,7 +10,7 @@ spec:
         environment: staging
     spec:
       containers:
-        - name: app
+        - name: guitartortona-api
           env:
             - name: ENVIRONMENT
               value: "staging"

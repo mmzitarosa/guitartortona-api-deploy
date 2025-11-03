@@ -12,8 +12,9 @@ resources:
   - external-secret-db.yaml
   - external-secret-ghcr.yaml
 
-patches:
-  - path: deployment-patch.yaml
+patchesStrategicMerge:
+  - deployment-patch.yaml
+  - deployment-version-label.yaml
 
 commonLabels:
   environment: production
@@ -21,4 +22,4 @@ commonLabels:
 
 images:
   - name: ghcr.io/mmzitarosa/guitartortona-api
-    newTag: latest
+    newTag: v1.2.0

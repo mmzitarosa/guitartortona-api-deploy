@@ -10,8 +10,9 @@ resources:
   - external-secret-db.yaml
   - external-secret-ghcr.yaml
 
-patches:
-  - path: deployment-patch.yaml
+patchesStrategicMerge:
+  - deployment-patch.yaml
+  - deployment-version-label.yaml
 
 commonLabels:
   environment: staging
