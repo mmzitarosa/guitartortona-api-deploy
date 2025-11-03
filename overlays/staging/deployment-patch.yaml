@@ -2,12 +2,16 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: guitartortona-api
+  labels:
+    environment: staging
+    app.kubernetes.io/version: v1.2.0-rc9
 spec:
   replicas: 1
   template:
     metadata:
       labels:
         environment: staging
+        app.kubernetes.io/version: v1.2.0-rc9
     spec:
       containers:
         - name: guitartortona-api

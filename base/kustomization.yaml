@@ -5,8 +5,3 @@ resources:
   - deployment.yaml
   - service.yaml
   - configmap.yaml
-
-commonLabels:
-  app.kubernetes.io/name: guitartortona-api
-  app.kubernetes.io/component: backend
-  app.kubernetes.io/managed-by: argocd

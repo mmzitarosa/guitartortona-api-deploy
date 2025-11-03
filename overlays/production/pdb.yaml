@@ -6,4 +6,4 @@ spec:
   minAvailable: 2
   selector:
     matchLabels:
-      app: guitartortona-api
+      app.kubernetes.io/name: guitartortona-api
