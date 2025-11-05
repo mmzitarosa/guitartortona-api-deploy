@@ -17,4 +17,4 @@ patches:
 
 images:
   - name: ghcr.io/mmzitarosa/guitartortona-api
-    newTag: v1.0.0
+    newTag: v1.0.1
