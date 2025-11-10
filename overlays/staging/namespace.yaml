@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: staging
+  name: api-staging
   labels:
-    environment: staging
+    environment: api-staging
     monitoring: enabled
